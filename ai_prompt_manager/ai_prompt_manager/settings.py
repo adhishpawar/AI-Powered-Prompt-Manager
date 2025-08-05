@@ -163,27 +163,26 @@ import os
 import logging.config
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'detailed': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'handlers': {
-        'prompt_file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'prompt_logs.log'),
-            'formatter': 'detailed',
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "prompt_logger": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
-    'loggers': {
-        'prompt_logger': {
-            'handlers': ['prompt_file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    }
 }

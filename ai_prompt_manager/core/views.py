@@ -57,7 +57,17 @@ class PromptTemplateViewSet(viewsets.ModelViewSet):
         return PromptTemplate.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        instance = serializer.save(user=self.request.user)
+
+        from core.ai.utils import analyze_prompt_with_ai
+        result = analyze_prompt_with_ai(instance.content)
+
+        if result:
+            instance.category = result["category"]
+            instance.priority = result["priority"]
+            instance.clarity_score = result["clarity_score"]
+            instance.ai_feedback = result["ai_feedback"]
+            instance.save()
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def run(self, request, pk = None):
@@ -71,16 +81,17 @@ class PromptTemplateViewSet(viewsets.ModelViewSet):
             prompt_logger.info(f"[{request.user.username}] Prompt: {prompt_obj.content} | Input: {input_data}")
 
             #OpenAI CALL
-            client = OpenAI(api_key=settings.OPENAI_API_KEY)
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+            
+            openai.api_key = settings.OPENAI_API_KEY
+            response = openai.ChatCompletion.create(
+                model="gpt-4o",
                 messages=[
                     {"role": "user", "content": full_prompt}
                 ],
                 max_tokens=100
             )
 
-            output = response.choices[0].message.content.strip()
+            output = response.choices[0].message.content
 
             # LOG the output
             prompt_logger.info(f"[{request.user.username}] OpenAI Output: {output}")

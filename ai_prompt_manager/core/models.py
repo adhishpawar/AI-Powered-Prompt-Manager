@@ -3,13 +3,64 @@ from django.contrib.auth.models import User
 
 
 class PromptTemplate(models.Model):
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+
+    CATEGORY_CHOICES = [
+        ('technical', 'Technical'),
+        ('marketing', 'Marketing'),
+        ('educational', 'Educational'),
+        ('design', 'Design'),
+        ('other', 'Other'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='prompts')
     prompt_title = models.CharField(max_length=100)
     content = models.TextField()
-    category = models.CharField(max_length=50, default='general') 
-    visibility = models.BooleanField(default=True) 
+
+    category = models.CharField(
+        max_length=50,
+        choices=CATEGORY_CHOICES,
+        default='other',
+        null=False,
+        blank=False,
+        help_text="AI-assigned category (e.g., Technical, Marketing, Educational)"
+    ) 
+
+    priority = models.CharField(
+        max_length=10,
+        choices=PRIORITY_CHOICES,
+        default='low',
+        null=False,
+        blank=False,
+        help_text="AI-evaluated priority level"
+    )
+
+    clarity_score = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="AI-evaluated clarity score (1.00 to 10.00)"
+    )
+
+    ai_feedback = models.TextField(
+        null=True,
+        blank=True,
+        help_text="AI-generated suggestions or review comments for this prompt"
+    )
+
+    
     created_at = models.DateTimeField(auto_now_add=True)
-    description = models.TextField(blank=True, null=True)   #Now Added
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Prompt Template"
+        verbose_name_plural = "Prompt Templates"
 
     def __str__(self):
         return f"{self.title} by {self.user.username}"
