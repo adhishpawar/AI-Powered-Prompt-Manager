@@ -17,6 +17,7 @@ class PromptTemplate(models.Model):
 
 class PromptHistory(models.Model):
     prompt = models.ForeignKey(PromptTemplate, on_delete=models.CASCADE, related_name='histories')
+    input_data = models.TextField(blank=True, null=True)
     openai_response = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
