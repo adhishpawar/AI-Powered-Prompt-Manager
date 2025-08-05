@@ -17,6 +17,9 @@ from .serializers import PromptTemplateSerializers, PromptHistorySerializer
 from openai import OpenAI
 from django.conf import settings
 
+import logging
+prompt_logger = logging.getLogger('prompt_logger')
+
 
 ##Registration View
 class RegisterUserView(generics.CreateAPIView):
@@ -59,19 +62,16 @@ class PromptTemplateViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def run(self, request, pk = None):
         try:
-            print("🔍 Starting /run/ logic")
+           
             prompt_obj = self.get_object()
             input_data = request.data.get('input', '')
             full_prompt = f"{prompt_obj.content}\n{input_data}"
-            print(f"📥 Input Data: {input_data}")
 
-            full_prompt = f"{prompt_obj.content}\n{input_data}"
-            print(f"🧠 Full Prompt: {full_prompt}")
-
+            # LOG the prompt and input
+            prompt_logger.info(f"[{request.user.username}] Prompt: {prompt_obj.content} | Input: {input_data}")
 
             #OpenAI CALL
             client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -80,10 +80,10 @@ class PromptTemplateViewSet(viewsets.ModelViewSet):
                 max_tokens=100
             )
 
-
-            print("✅ OpenAI API call successful")
-
             output = response.choices[0].message.content.strip()
+
+            # LOG the output
+            prompt_logger.info(f"[{request.user.username}] OpenAI Output: {output}")
 
 
             #save in PromptHistory
@@ -93,12 +93,11 @@ class PromptTemplateViewSet(viewsets.ModelViewSet):
                 openai_response = output
             )
 
-            print("💾 History saved")
-
             return Response({'output':output}, status=status.HTTP_200_OK)
         
         except Exception as e:
-            print("❌ ERROR:", str(e))
+            print("ERROR:", str(e))
+            prompt_logger.error(f"Error while processing prompt: {str(e)}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
 

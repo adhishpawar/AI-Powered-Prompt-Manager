@@ -157,3 +157,33 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+
+import os
+import logging.config
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'detailed': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'prompt_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'prompt_logs.log'),
+            'formatter': 'detailed',
+        },
+    },
+    'loggers': {
+        'prompt_logger': {
+            'handlers': ['prompt_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    }
+}
