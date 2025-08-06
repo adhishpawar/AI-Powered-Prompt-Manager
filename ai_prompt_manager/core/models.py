@@ -74,3 +74,21 @@ class PromptHistory(models.Model):
 
     def __str__(self):
         return f"History for Prompt ID {self.prompt.id} at {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+    
+class PromptIntent(models.Model):
+    STAGE_CHOICES = [
+        ('draft', 'Draft'),
+        ('clarifying', 'Clarifying'),
+        ('finalized', 'Finalized')
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='intents')
+    intent = models.TextField(help_text="User's raw prompt idea")
+    clarification_chat = models.TextField(blank=True, null=True, help_text="Running chat history with GPT")
+    structured_prompt = models.TextField(blank=True, null=True, help_text="Final refined prompt from GPT")
+    stage = models.CharField(max_length=20, choices=STAGE_CHOICES, default='draft')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Intent by {self.user.username} - {self.stage}"

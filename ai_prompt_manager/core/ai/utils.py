@@ -6,7 +6,7 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
-MODEL = "gpt-4o"
+MODEL = "gpt-4o-mini"
 
 def analyze_prompt_with_ai(prompt_text):
     """
@@ -38,7 +38,7 @@ def analyze_prompt_with_ai(prompt_text):
         response = client.chat.completions.create(
             model=MODEL,
             messages=[system_message, user_message],
-            temperature=0.3,
+            temperature=0.9,
             max_tokens=300,
             timeout=10,
         )
