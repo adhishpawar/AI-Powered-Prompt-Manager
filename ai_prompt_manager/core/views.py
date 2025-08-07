@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from django.contrib.auth.models import User
+
+from core.ai.promptEngine import expand_intent
 from .serializers import RegisterSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework import viewsets,status
@@ -13,7 +15,6 @@ from rest_framework.permissions import IsAuthenticated
 from core.ai.utils import analyze_prompt_with_ai
 
 import json
-import openai
 
 from rest_framework.decorators import api_view, permission_classes
 
@@ -26,6 +27,7 @@ from django.conf import settings
 import logging
 prompt_logger = logging.getLogger('prompt_logger')
 
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 ##Registration View
 class RegisterUserView(generics.CreateAPIView):
@@ -124,8 +126,6 @@ class PromptHistoryViewSet(viewsets.ModelViewSet):
         return PromptHistory.objects.filter(prompt__user=self.request.user)
 
 
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def generate_prompt_template(request):
@@ -138,11 +138,12 @@ def generate_prompt_template(request):
             return Response({"error": "Intent is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Step 1: Format the GPT prompt
-        prompt_input = build_structured_prompt(intent, attributes)
+        expanded_intent  = expand_intent(intent)
+        prompt_input = build_structured_prompt(expanded_intent , attributes)
 
         # Step 2: Call GPT to generate structured prompt
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a prompt generator that creates clear, concise prompts for various AI tasks."},
                 {"role": "user", "content": prompt_input}
